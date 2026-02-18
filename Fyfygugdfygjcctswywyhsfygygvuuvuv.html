@@ -15,6 +15,48 @@
             border-radius: 5px;
             display: none; /* Oculto si no hay error */
         }
+        
+        /* ESTILOS PARA EL PREDICTIVO */
+        .search-container {
+            position: relative;
+            width: 100%;
+        }
+        
+        #suggestionsList {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a; /* Fondo oscuro */
+            border: 1px solid #444;
+            border-radius: 0 0 5px 5px;
+            max-height: 150px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none; /* Oculto por defecto */
+        }
+
+        .suggestion-item {
+            padding: 10px;
+            cursor: pointer;
+            border-bottom: 1px solid #333;
+            color: #fff;
+        }
+
+        .suggestion-item:hover {
+            background-color: #00d2d3; /* Color al pasar el mouse */
+            color: #000;
+        }
+
+        .suggestion-item small {
+            color: #aaa;
+            margin-left: 5px;
+            font-size: 0.8em;
+        }
+        
+        .suggestion-item:hover small {
+            color: #333;
+        }
     </style>
 </head>
 <body>
@@ -49,7 +91,11 @@ EFGH-5678"></textarea>
 
         <div class="product-card">
             <h3>3. Gestionar Usuarios</h3>
-            <input type="text" id="userSearch" placeholder="Nombre exacto del usuario">
+            <div class="search-container">
+                <input type="text" id="userSearch" placeholder="Escribe para buscar usuario..." autocomplete="off">
+                <div id="suggestionsList"></div>
+            </div>
+            
             <input type="number" id="amountAdd" placeholder="Cantidad a sumar (USD)" step="0.1">
             <button onclick="addBalance()">Añadir Saldo</button>
             <p id="adminMsg"></p>
@@ -60,6 +106,9 @@ EFGH-5678"></textarea>
 
     <script type="module">
         import { db, ref, push, set, get, update, auth, onAuthStateChanged } from './firebase-config.js';
+
+        // Variable global para guardar los usuarios temporalmente y hacer la búsqueda rápida
+        let cachedUsers = [];
 
         // --- SISTEMA DE LOGS EN PANTALLA ---
         function logError(msg) {
@@ -75,13 +124,78 @@ EFGH-5678"></textarea>
             if (user) {
                 loading.innerText = "Conectado como: " + user.email;
                 loading.style.color = "#2ecc71";
-                // Solo cargamos productos cuando confirmamos conexión
+                // Solo cargamos productos y usuarios cuando confirmamos conexión
                 loadProductSelect();
+                loadUsersForSearch(); // Cargar usuarios para el predictivo
             } else {
                 loading.innerText = "⚠️ No estás logueado. La base de datos puede rechazar la lectura.";
                 loading.style.color = "#e74c3c";
-                // Intentamos cargar de todas formas por si las reglas son públicas
                 loadProductSelect();
+            }
+        });
+
+        // --- NUEVO: CARGAR USUARIOS PARA EL PREDICTIVO ---
+        window.loadUsersForSearch = function() {
+            console.log("Cargando lista de usuarios para búsqueda...");
+            get(ref(db, 'users')).then(snap => {
+                cachedUsers = []; // Reiniciar lista
+                if(snap.exists()){
+                    snap.forEach(childSnap => {
+                        const userData = childSnap.val();
+                        // Guardamos UID y Username
+                        cachedUsers.push({
+                            key: childSnap.key,
+                            username: userData.username || "Sin Nombre",
+                            email: userData.email || ""
+                        });
+                    });
+                    console.log(`Cargados ${cachedUsers.length} usuarios para búsqueda.`);
+                }
+            }).catch(error => {
+                console.warn("No se pudo pre-cargar usuarios (posiblemente falta de permisos de admin).");
+            });
+        }
+
+        // --- NUEVO: LÓGICA DE BÚSQUEDA PREDICTIVA ---
+        const searchInput = document.getElementById('userSearch');
+        const suggestionsBox = document.getElementById('suggestionsList');
+
+        searchInput.addEventListener('input', function() {
+            const text = this.value.toLowerCase();
+            suggestionsBox.innerHTML = ''; // Limpiar lista anterior
+            
+            if (text.length === 0) {
+                suggestionsBox.style.display = 'none';
+                return;
+            }
+
+            // Filtrar usuarios que empiecen con el texto escrito
+            const matches = cachedUsers.filter(u => u.username.toLowerCase().startsWith(text));
+
+            if (matches.length > 0) {
+                suggestionsBox.style.display = 'block';
+                matches.forEach(user => {
+                    const div = document.createElement('div');
+                    div.className = 'suggestion-item';
+                    // Muestra el nombre y el UID recortado en pequeño
+                    div.innerHTML = `${user.username} <small>(${user.key.substr(0,5)}...)</small>`;
+                    
+                    // Al hacer click, rellenar el input
+                    div.onclick = () => {
+                        searchInput.value = user.username;
+                        suggestionsBox.style.display = 'none';
+                    };
+                    suggestionsBox.appendChild(div);
+                });
+            } else {
+                suggestionsBox.style.display = 'none';
+            }
+        });
+
+        // Cerrar sugerencias si haces click fuera
+        document.addEventListener('click', function(e) {
+            if (e.target !== searchInput) {
+                suggestionsBox.style.display = 'none';
             }
         });
 
@@ -201,11 +315,14 @@ EFGH-5678"></textarea>
             msg.innerText = "Buscando usuario...";
             
             try {
+                // NOTA: Como ya tenemos cachedUsers, podríamos buscar ahí, 
+                // pero por seguridad hacemos get() directo para tener el saldo más reciente.
                 const snapshot = await get(ref(db, 'users'));
                 let foundUid = null;
                 let currentBal = 0;
 
                 snapshot.forEach(childSnap => {
+                    // Comparamos el nombre escrito con la base de datos
                     if(childSnap.val().username === targetUser) {
                         foundUid = childSnap.key;
                         currentBal = parseFloat(childSnap.val().balance || 0);
@@ -218,6 +335,9 @@ EFGH-5678"></textarea>
                     msg.innerText = `Saldo actualizado a $${newBal}`;
                     msg.className = "success";
                     document.getElementById('amountAdd').value = '';
+                    
+                    // Opcional: Recargar usuarios por si el saldo se mostrara en el predictivo
+                    // loadUsersForSearch(); 
                 } else {
                     msg.innerText = "Usuario no encontrado";
                     msg.className = "error";
