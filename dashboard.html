@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - TÚ REY DRIP</title>
+    <title>Dashboard - LUCK XIT GALAXY</title>
     <style>
         /* =========================================
            1. FUENTES Y PROTECCIÓN
@@ -84,17 +84,17 @@
             letter-spacing: 1px;
             color: #fff;
             text-shadow: 0 0 10px var(--neon-purple);
-            line-height: 1.4; /* Mejora la separación vertical */
+            line-height: 1.4; 
         }
 
         /* ESTILO DEL NOMBRE DE USUARIO (DEBAJO DE BIENVENIDO) */
         h1 span {
             color: var(--neon-red);
             text-shadow: 0 0 15px var(--neon-red);
-            display: block; /* Esto fuerza el salto de línea */
+            display: block; /* IMPORTANTE: Esto pone el nombre debajo */
             font-size: 1.3em;
-            margin-top: 10px; /* Separación para que no se pegue al bienvenido */
-            min-height: 1.3em; /* Reserva espacio para evitar saltos bruscos */
+            margin-top: 10px; 
+            min-height: 1.3em; 
         }
 
         /* =========================================
@@ -142,11 +142,13 @@
             transform: scale(0.98);
         }
 
+        /* Botón Admin */
         #adminBtn {
             background: linear-gradient(135deg, #8e44ad 0%, #3498db 100%);
             border: 1px solid #fff;
         }
 
+        /* Botón Cerrar Sesión */
         .logout-btn {
             background: transparent;
             border: 2px solid rgba(255, 7, 58, 0.5);
@@ -176,7 +178,7 @@
 <body oncontextmenu="return false;"> <canvas id="particle-canvas"></canvas>
 
     <div class="container">
-        <h1>Bienvenido <span id="userDisplay">Cargando...</span></h1>
+        <h1>Bienvenido <span id="userDisplay">...</span></h1>
         
         <button class="neon-btn" onclick="window.location.href='recarga.html'">
             Recargar Saldo
@@ -196,6 +198,7 @@
     </div>
 
     <script>
+        /* SCRIPT DE FONDO DE PARTÍCULAS */
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -271,35 +274,25 @@
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
-                const userDisplayElement = document.getElementById('userDisplay');
-                
-                // Obtener datos del usuario en la base de datos
+                // Buscamos los datos tal cual como en tu código de muestra
                 get(child(ref(db), `users/${user.uid}`)).then((snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
-                        // CORRECCIÓN: Usar el nombre de la BD o un fallback si está vacío
-                        userDisplayElement.innerText = data.username ? data.username : "Usuario";
+                        // Asignamos el nombre al span
+                        document.getElementById('userDisplay').innerText = data.username;
                         
-                        // Verificar si es Admin
+                        // Verificamos si es admin
                         if(data.role === 'admin') {
                             document.getElementById('adminBtn').style.display = 'block';
                         }
-                    } else {
-                        // Si no existe en la BD, mostrar nombre de Auth o "Usuario" para quitar "Cargando..."
-                        userDisplayElement.innerText = user.displayName || "Usuario";
                     }
-                }).catch((error) => {
-                    console.error("Error obteniendo datos:", error);
-                    // En caso de error, mostrar algo genérico para no dejar "Cargando..."
-                    userDisplayElement.innerText = "Usuario"; 
                 });
             } else {
-                // Si no hay sesión, mandar al login
+                // Si no hay usuario, redirige
                 window.location.href = "login.html";
             }
         });
 
-        // Evento Cerrar Sesión
         document.getElementById('logoutBtn').addEventListener('click', () => {
             signOut(auth).then(() => window.location.href = "login.html");
         });
