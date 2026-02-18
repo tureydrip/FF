@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard - LUCK XIT GALAXY</title>
+    <style>
+        /* =========================================
+           1. FUENTES Y PROTECCIÓN
+           ========================================= */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap');
+
+        /* BLOQUEO DE SELECCIÓN (ANTI-COPIA) */
+        * {
+            -webkit-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        /* Variables de color */
+        :root {
+            --neon-purple: #bc13fe;
+            --neon-red: #ff073a;
+            --glass-bg: rgba(20, 0, 30, 0.6);
+        }
+
+        body {
+            background-color: #020005;
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow: hidden; /* Evitar barras de desplazamiento por animaciones */
+        }
+
+        /* FONDO DE PARTÍCULAS */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        /* =========================================
+           2. CONTENEDOR TIPO CRISTAL
+           ========================================= */
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 
+                0 0 30px rgba(188, 19, 254, 0.2),
+                inset 0 0 20px rgba(255, 7, 58, 0.1);
+            width: 90%;
+            max-width: 400px;
+            border: 1px solid rgba(188, 19, 254, 0.3);
+            text-align: center;
+            animation: fadeIn 1s ease-out;
+            display: flex;
+            flex-direction: column;
+            gap: 20px; /* Espacio entre botones */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* TÍTULO DE BIENVENIDA */
+        h1 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.8rem;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #fff;
+            text-shadow: 0 0 10px var(--neon-purple);
+        }
+
+        h1 span {
+            color: var(--neon-red);
+            text-shadow: 0 0 15px var(--neon-red);
+            display: block;
+            font-size: 1.2em;
+            margin-top: 5px;
+        }
+
+        /* =========================================
+           3. BOTONES ANIMADOS
+           ========================================= */
+        
+        /* Estilo base para botones principales */
+        .neon-btn {
+            padding: 18px;
+            background: linear-gradient(135deg, var(--neon-purple) 0%, var(--neon-red) 100%);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 0 15px rgba(188, 19, 254, 0.3);
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 1px;
+            width: 100%;
+        }
+
+        /* Efecto de brillo al pasar el mouse */
+        .neon-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .neon-btn:hover {
+            transform: scale(1.05) translateY(-2px);
+            box-shadow: 0 0 25px var(--neon-purple), 0 0 5px #fff;
+        }
+
+        .neon-btn:hover::before {
+            left: 100%;
+        }
+
+        .neon-btn:active {
+            transform: scale(0.98);
+        }
+
+        /* Botón Admin (Estilo específico si quieres diferenciarlo, o usa el mismo) */
+        #adminBtn {
+            background: linear-gradient(135deg, #8e44ad 0%, #3498db 100%);
+            border: 1px solid #fff;
+        }
+
+        /* Botón Cerrar Sesión (Estilo Outline) */
+        .logout-btn {
+            background: transparent;
+            border: 2px solid rgba(255, 7, 58, 0.5);
+            color: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 12px;
+            font-family: 'Poppins', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .logout-btn:hover {
+            background: var(--neon-red);
+            color: white;
+            box-shadow: 0 0 20px var(--neon-red);
+            border-color: var(--neon-red);
+            transform: scale(1.02);
+        }
+
+    </style>
+</head>
+<body oncontextmenu="return false;"> <canvas id="particle-canvas"></canvas>
+
+    <div class="container">
+        <h1>Bienvenido <span id="userDisplay">Cargando...</span></h1>
+        
+        <button class="neon-btn" onclick="window.location.href='recarga.html'">
+            Recargar Saldo
+        </button>
+        
+        <button class="neon-btn" onclick="window.location.href='index.html'">
+            Comprar Productos
+        </button>
+        
+        <button id="adminBtn" class="neon-btn" style="display:none;" onclick="window.location.href='admin.html'">
+            Panel Admin
+        </button>
+
+        <button class="logout-btn" id="logoutBtn">
+            Cerrar Sesión
+        </button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.size = Math.random() * 2 + 1;
+                this.color = Math.random() > 0.5 ? 'rgba(255, 7, 58, ' : 'rgba(188, 19, 254, ';
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + this.alpha + ')';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color + '1)';
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 60; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'rgba(150, 50, 255, ' + (1 - distance/120) * 0.2 + ')';
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+        initParticles();
+        animate();
+    </script>
+
+    <script type="module">
+        import { auth, db, onAuthStateChanged, signOut, ref, get, child } from './firebase-config.js';
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                // Obtener datos del usuario
+                get(child(ref(db), `users/${user.uid}`)).then((snapshot) => {
+                    if (snapshot.exists()) {
+                        const data = snapshot.val();
+                        document.getElementById('userDisplay').innerText = data.username;
+                        
+                        // Verificar si es Admin para mostrar el botón
+                        if(data.role === 'admin') {
+                            document.getElementById('adminBtn').style.display = 'block';
+                        }
+                    }
+                });
+            } else {
+                // Si no hay sesión, mandar al login
+                window.location.href = "login.html";
+            }
+        });
+
+        // Evento Cerrar Sesión
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            signOut(auth).then(() => window.location.href = "login.html");
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,705 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tienda de Keys - LUCK XIT GALAXY</title>
+    <style>
+        /* =========================================
+           1. FUENTES Y PROTECCIÓN
+           ========================================= */
+        @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Poppins:wght@300;400;600&display=swap');
+
+        /* BLOQUEO DE SELECCIÓN DE TEXTO (ANTI-COPIA) */
+        * {
+            -webkit-user-select: none; /* Safari */
+            -ms-user-select: none; /* IE 10 and IE 11 */
+            user-select: none; /* Standard syntax */
+            -webkit-touch-callout: none; /* iOS Safari */
+        }
+
+        body {
+            background-color: #020005; /* Fondo casi negro */
+            color: white;
+            font-family: 'Poppins', sans-serif;
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            overflow-x: hidden;
+        }
+
+        /* FONDO DE PARTÍCULAS */
+        #particle-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Detrás de todo */
+        }
+
+        /* =========================================
+           2. ESTILOS DEL CONTENEDOR Y NEÓN
+           ========================================= */
+        
+        /* Variables de color Morado/Rojo Fluorescente */
+        :root {
+            --neon-purple: #bc13fe;
+            --neon-red: #ff073a;
+            --neon-glow: #ff00de;
+            --glass-bg: rgba(20, 0, 30, 0.6);
+        }
+
+        /* --- CONTENEDOR PRINCIPAL --- */
+        .container {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            padding: 2.5rem;
+            border-radius: 20px;
+            box-shadow: 
+                0 0 20px rgba(188, 19, 254, 0.2),
+                inset 0 0 20px rgba(255, 7, 58, 0.1);
+            width: 90%;
+            max-width: 420px;
+            border: 1px solid rgba(188, 19, 254, 0.3);
+            animation: slideIn 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+            text-align: center;
+            position: relative;
+            z-index: 10;
+        }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: scale(0.9) translateY(30px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        h2 { 
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 900;
+            background: linear-gradient(90deg, var(--neon-purple), #fff, var(--neon-red));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1.5rem; 
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            filter: drop-shadow(0 0 5px var(--neon-purple));
+        }
+
+        /* --- DISPLAY DE SALDO --- */
+        .balance-display {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: #fff;
+            margin-bottom: 30px;
+            text-shadow: 
+                0 0 10px var(--neon-red),
+                0 0 20px var(--neon-purple);
+            font-weight: bold;
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 10px;
+            border-radius: 10px;
+            background: rgba(0,0,0,0.3);
+        }
+
+        /* --- BOTÓN PRINCIPAL CON ANIMACIÓN CHIDA --- */
+        .main-select-btn {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, var(--neon-purple) 0%, var(--neon-red) 100%);
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 1.1rem;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 0 15px rgba(255, 7, 58, 0.4);
+            margin-bottom: 15px;
+            position: relative;
+            overflow: hidden;
+            letter-spacing: 1px;
+        }
+
+        .main-select-btn::before {
+            content: '';
+            position: absolute;
+            top: 0; left: -100%;
+            width: 100%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent);
+            transition: 0.5s;
+        }
+
+        .main-select-btn:hover {
+            transform: scale(1.05) translateY(-3px);
+            box-shadow: 0 0 35px var(--neon-purple), 0 0 10px #fff;
+        }
+        
+        .main-select-btn:hover::before {
+            left: 100%;
+        }
+
+        .main-select-btn:active {
+            transform: scale(0.95);
+        }
+
+        .back-btn {
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #ccc;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.3s;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        .back-btn:hover { 
+            border-color: var(--neon-purple); 
+            color: white; 
+            text-shadow: 0 0 8px var(--neon-purple);
+            background: rgba(188, 19, 254, 0.1);
+        }
+
+        /* =========================================
+           3. ESTILOS DE LOS MODALES
+           ========================================= */
+        .modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            backdrop-filter: blur(8px);
+            display: none; 
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            animation: fadeIn 0.3s;
+        }
+
+        .modal-box {
+            background: #0a0a0a;
+            padding: 30px;
+            border-radius: 25px;
+            width: 85%;
+            max-width: 450px;
+            border: 2px solid #333;
+            box-shadow: 0 0 50px rgba(188, 19, 254, 0.15);
+            position: relative;
+            text-align: center;
+            background-image: linear-gradient(rgba(20, 0, 30, 0.9), rgba(20, 0, 30, 0.9)), url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0IiBoZWlnaHQ9IjQiPgo8cmVjdCB3aWR0aD0iNCIgaGVpZ2h0PSI0IiBmaWxsPSIjMTExIj48L3JlY3Q+CjxyZWN0IHdpZHRoPSIxIiBoZWlnaHQ9IjEiIGZpbGw9IiMzMzMiPjwvcmVjdD4KPC9zdmc+');
+        }
+
+        .neon-title {
+            color: #fff;
+            text-shadow: 0 0 15px var(--neon-purple), 0 0 5px var(--neon-red);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            font-family: 'Orbitron', sans-serif;
+        }
+
+        /* --- LISTA DE PRODUCTOS --- */
+        #products-list-container {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+            text-align: left; 
+            padding-right: 5px;
+        }
+        
+        /* Scrollbar neón */
+        #products-list-container::-webkit-scrollbar { width: 6px; }
+        #products-list-container::-webkit-scrollbar-thumb { background: var(--neon-purple); border-radius: 3px; }
+        #products-list-container::-webkit-scrollbar-track { background: #111; }
+
+        .product-item {
+            background: linear-gradient(90deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01));
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 18px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-item::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 0%; height: 2px;
+            background: linear-gradient(90deg, var(--neon-purple), var(--neon-red));
+            transition: 0.4s;
+        }
+
+        .product-item:hover {
+            border-color: var(--neon-red);
+            background: rgba(255, 7, 58, 0.05);
+            transform: translateX(8px);
+            box-shadow: 0 0 15px rgba(255, 7, 58, 0.2);
+        }
+
+        .product-item:hover::after { width: 100%; }
+
+        .prod-name {
+            color: #fff;
+            font-weight: 700;
+            font-size: 1.05rem;
+        }
+        .prod-duration {
+            color: #aaa;
+            font-size: 0.85rem;
+            font-style: italic;
+            display: block;
+        }
+        .prod-price {
+            color: var(--neon-purple);
+            font-family: 'Orbitron', sans-serif;
+            font-weight: bold;
+            font-size: 1.2rem;
+            text-shadow: 0 0 8px rgba(188, 19, 254, 0.6);
+        }
+
+        /* --- MODAL DETALLES --- */
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 15px 0;
+            border-bottom: 1px dashed #444;
+            font-size: 1.1rem;
+            color: #ddd;
+        }
+        .detail-row span { 
+            color: var(--neon-purple); 
+            font-weight: bold; 
+            text-shadow: 0 0 5px rgba(188, 19, 254, 0.4);
+        }
+
+        .btn-buy {
+            width: 100%;
+            padding: 18px;
+            margin-top: 25px;
+            background: transparent;
+            color: var(--neon-red);
+            font-weight: bold;
+            border: 2px solid var(--neon-red);
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            font-family: 'Orbitron', sans-serif;
+            box-shadow: 0 0 10px rgba(255, 7, 58, 0.2);
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        
+        .btn-buy:disabled {
+            border-color: #555;
+            color: #555;
+            box-shadow: none;
+            cursor: not-allowed;
+            background: transparent;
+        }
+
+        .btn-buy:hover:not(:disabled) {
+            background: var(--neon-red);
+            color: white;
+            box-shadow: 0 0 30px var(--neon-red);
+            transform: scale(1.05);
+        }
+
+        /* --- MODAL DE ÉXITO --- */
+        .modal-success {
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 30px #00ff00;
+        }
+        .key-box {
+            background: #000;
+            border: 2px dashed #00ff00;
+            color: #00ff00;
+            font-family: 'Courier New', monospace;
+            padding: 20px;
+            font-size: 1.3rem;
+            margin: 25px 0;
+            border-radius: 10px;
+            word-break: break-all;
+            text-shadow: 0 0 8px #00ff00;
+            position: relative;
+        }
+        .btn-copy {
+            background: #00ff00;
+            border: none;
+            color: black;
+            font-weight: bold;
+            padding: 12px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s;
+            text-transform: uppercase;
+        }
+        .btn-copy:hover { 
+            background: white; 
+            box-shadow: 0 0 20px #00ff00; 
+            transform: scale(1.1);
+        }
+
+        #statusMsg { font-size: 0.95rem; margin-top: 15px; font-weight: 500; }
+        .error-text { color: #ff3333; text-shadow: 0 0 5px #ff0000; }
+
+        /* Ajustes Mobile */
+        @media (max-width: 480px) {
+            .container { padding: 1.5rem; width: 85%; }
+            h2 { font-size: 1.4rem; }
+            .balance-display { font-size: 1.6rem; }
+        }
+    </style>
+</head>
+<body oncontextmenu="return false;"> <canvas id="particle-canvas"></canvas>
+
+    <div class="container">
+        <h2>Tienda de Keys<br><span style="font-size:0.6em; color:#fff; opacity:0.8;">LUCK XIT</span></h2>
+        
+        <div class="balance-display">
+            $<span id="balance">0.00</span>
+        </div>
+
+        <p id="statusMsg"></p>
+
+        <button class="main-select-btn" onclick="openSelector()">
+            Seleccionar Producto
+        </button>
+
+        <button class="back-btn" onclick="window.location.href='dashboard.html'">
+            Volver al Panel
+        </button>
+    </div>
+
+    <div id="selectorModal" class="modal-overlay">
+        <div class="modal-box">
+            <h3 class="neon-title">ARSENAL DISPONIBLE</h3>
+            
+            <div id="products-list-container">
+                <p style="color:#aaa; animation: blink 1s infinite;">Conectando con el servidor...</p>
+            </div>
+
+            <button class="back-btn" onclick="closeSelector()">CANCELAR</button>
+        </div>
+    </div>
+
+    <div id="productDetailModal" class="modal-overlay">
+        <div class="modal-box">
+            <h2 id="detailName" class="neon-title" style="font-size: 1.6rem;">Nombre</h2>
+            
+            <div class="detail-row">
+                Duración: <span id="detailDuration">--</span>
+            </div>
+            <div class="detail-row">
+                Precio: <span id="detailPrice">--</span>
+            </div>
+            <div class="detail-row">
+                Stock: <span id="detailStock">--</span>
+            </div>
+
+            <button id="btnBuyConfirm" class="btn-buy">Comprar</button>
+            <button class="back-btn" onclick="backToSelector()" style="margin-top:15px; width:100%">Volver</button>
+        </div>
+    </div>
+
+    <div id="neonModal" class="modal-overlay">
+        <div class="modal-box modal-success">
+            <h2 style="color:#00ff00; margin-bottom:5px; text-shadow: 0 0 10px #00ff00;">¡TRANSACCIÓN ÉXITOSA!</h2>
+            <p style="color:#ccc; font-size:0.9rem;">Tu acceso ha sido desencriptado:</p>
+            
+            <div id="deliveredKeyNeon" class="key-box">CARGANDO...</div>
+            
+            <button class="btn-copy" onclick="copyKey()">Copiar Código</button>
+            <br><br>
+            <button class="back-btn" onclick="location.reload()">Cerrar y Actualizar</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('particle-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let particles = [];
+
+        function resize() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        class Particle {
+            constructor() {
+                this.x = Math.random() * width;
+                this.y = Math.random() * height;
+                this.vx = (Math.random() - 0.5) * 1.5;
+                this.vy = (Math.random() - 0.5) * 1.5;
+                this.size = Math.random() * 2 + 1;
+                // Alternar entre rojo neon y morado neon
+                this.color = Math.random() > 0.5 ? 'rgba(255, 7, 58, ' : 'rgba(188, 19, 254, ';
+                this.alpha = Math.random() * 0.5 + 0.2;
+            }
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                if (this.x < 0 || this.x > width) this.vx *= -1;
+                if (this.y < 0 || this.y > height) this.vy *= -1;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = this.color + this.alpha + ')';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = this.color + '1)';
+                ctx.fill();
+            }
+        }
+
+        function initParticles() {
+            particles = [];
+            for (let i = 0; i < 70; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        function animate() {
+            ctx.clearRect(0, 0, width, height);
+            
+            // Dibujar líneas de conexión
+            for (let i = 0; i < particles.length; i++) {
+                particles[i].update();
+                particles[i].draw();
+                for (let j = i; j < particles.length; j++) {
+                    const dx = particles[i].x - particles[j].x;
+                    const dy = particles[i].y - particles[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = 'rgba(150, 50, 255, ' + (1 - distance/120) * 0.2 + ')';
+                        ctx.lineWidth = 1;
+                        ctx.moveTo(particles[i].x, particles[i].y);
+                        ctx.lineTo(particles[j].x, particles[j].y);
+                        ctx.stroke();
+                    }
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        initParticles();
+        animate();
+    </script>
+
+    <script type="module">
+        import { auth, db, onAuthStateChanged, ref, get, update, runTransaction, push } from './firebase-config.js';
+
+        // Variables Globales
+        let currentUser = null;
+        let currentBalance = 0;
+        
+        // Variables de la selección actual
+        let selectedProductId = null;
+        let selectedProductPrice = 0;
+        let selectedProductName = "";
+
+        // VERIFICAR AUTENTICACIÓN
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                loadUserData();
+                loadProductsData(); // Precargar lista
+            } else {
+                window.location.href = "login.html";
+            }
+        });
+
+        // CARGAR SALDO
+        function loadUserData() {
+            const userRef = ref(db, 'users/' + currentUser.uid);
+            get(userRef).then((snapshot) => {
+                if(snapshot.exists()) {
+                    currentBalance = parseFloat(snapshot.val().balance || 0);
+                    document.getElementById('balance').innerText = currentBalance.toFixed(2);
+                }
+            });
+        }
+
+        // --- FUNCIONES DE VENTANAS (MODALES) ---
+        window.openSelector = () => {
+            document.getElementById('selectorModal').style.display = 'flex';
+        };
+
+        window.closeSelector = () => {
+            document.getElementById('selectorModal').style.display = 'none';
+        };
+
+        window.backToSelector = () => {
+            document.getElementById('productDetailModal').style.display = 'none';
+            document.getElementById('selectorModal').style.display = 'flex';
+        };
+
+        // --- 1. CARGAR LA LISTA ---
+        async function loadProductsData() {
+            const container = document.getElementById('products-list-container');
+            const productsRef = ref(db, 'products');
+            
+            try {
+                const snapshot = await get(productsRef);
+                container.innerHTML = ""; // Limpiar
+
+                if (snapshot.exists()) {
+                    snapshot.forEach((child) => {
+                        const p = child.val();
+                        const id = child.key;
+                        const stock = p.keys ? Object.keys(p.keys).length : 0;
+
+                        // Crear el elemento visual del producto
+                        const item = document.createElement('div');
+                        item.className = 'product-item';
+
+                        item.innerHTML = `
+                            <div class="prod-info-left">
+                                <span class="prod-name">${p.name}</span>
+                                <span class="prod-duration">(${p.duration})</span>
+                            </div>
+                            <div class="prod-price">$${p.price}</div>
+                        `;
+
+                        // Evento Click: Abre detalles
+                        item.onclick = () => {
+                            closeSelector(); 
+                            showDetails(id, p.name, p.duration, p.price, stock); 
+                        };
+
+                        container.appendChild(item);
+                    });
+                } else {
+                    container.innerHTML = "<p style='text-align:center; color:#888'>NO HAY SUMINISTROS.</p>";
+                }
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = "<p class='error-text'>ERROR DE SISTEMA.</p>";
+            }
+        }
+
+        // --- 2. MOSTRAR DETALLES ---
+        function showDetails(id, name, duration, price, stock) {
+            selectedProductId = id;
+            selectedProductPrice = price;
+            selectedProductName = name;
+
+            // Rellenar datos en el modal
+            document.getElementById('detailName').innerText = name;
+            document.getElementById('detailDuration').innerText = duration;
+            document.getElementById('detailPrice').innerText = "$" + price;
+            
+            const stockEl = document.getElementById('detailStock');
+            const buyBtn = document.getElementById('btnBuyConfirm');
+
+            // Lógica de Stock
+            if (stock > 0) {
+                stockEl.innerText = stock + " DISPONIBLES";
+                stockEl.style.color = "#bc13fe";
+                buyBtn.disabled = false;
+                buyBtn.innerText = `ADQUIRIR POR $${price}`;
+                buyBtn.onclick = executePurchase; 
+            } else {
+                stockEl.innerText = "AGOTADO";
+                stockEl.style.color = "#ff3333";
+                buyBtn.disabled = true;
+                buyBtn.innerText = "SIN STOCK";
+            }
+
+            document.getElementById('productDetailModal').style.display = 'flex';
+        }
+
+        // --- 3. EJECUTAR COMPRA ---
+        async function executePurchase() {
+            const msg = document.getElementById('statusMsg');
+            
+            if (currentBalance < selectedProductPrice) {
+                alert("CRÉDITOS INSUFICIENTES.");
+                return;
+            }
+
+            document.getElementById('productDetailModal').style.display = 'none';
+            msg.innerText = "ENCRIPTANDO TRANSACCIÓN...";
+            msg.style.color = "#bc13fe";
+            
+            try {
+                const productRef = ref(db, 'products/' + selectedProductId);
+                let keyToDeliver = null;
+
+                const result = await runTransaction(productRef, (product) => {
+                    if (product === null) return product;
+
+                    if (product.keys) {
+                        const keyIds = Object.keys(product.keys);
+                        if (keyIds.length > 0) {
+                            const firstKeyId = keyIds[0];
+                            keyToDeliver = product.keys[firstKeyId]; 
+                            delete product.keys[firstKeyId]; 
+                            return product;
+                        }
+                    }
+                    return; 
+                });
+
+                if (result.committed && keyToDeliver) {
+                    const newBalance = parseFloat((currentBalance - selectedProductPrice).toFixed(2));
+                    
+                    const updates = {};
+                    updates['users/' + currentUser.uid + '/balance'] = newBalance;
+                    
+                    const historyRef = push(ref(db, 'users/' + currentUser.uid + '/history'));
+                    updates['users/' + currentUser.uid + '/history/' + historyRef.key] = {
+                        product: selectedProductName,
+                        key: keyToDeliver,
+                        price: selectedProductPrice,
+                        date: Date.now()
+                    };
+
+                    await update(ref(db), updates);
+
+                    currentBalance = newBalance;
+                    document.getElementById('balance').innerText = currentBalance.toFixed(2);
+                    msg.innerText = "";
+
+                    document.getElementById('deliveredKeyNeon').innerText = keyToDeliver;
+                    document.getElementById('neonModal').style.display = 'flex';
+
+                } else {
+                    msg.innerText = "ERROR: Stock agotado durante la solicitud.";
+                    msg.className = "error-text";
+                }
+
+            } catch (error) {
+                console.error("Error en la compra:", error);
+                msg.innerText = "ERROR CRÍTICO DE CONEXIÓN.";
+                msg.className = "error-text";
+            }
+        }
+
+        // Copiar al portapapeles
+        window.copyKey = () => {
+            const keyText = document.getElementById('deliveredKeyNeon').innerText;
+            navigator.clipboard.writeText(keyText).then(() => {
+                const btn = document.querySelector('.btn-copy');
+                const originalText = btn.innerText;
+                btn.innerText = "¡COPIADO!";
+                setTimeout(() => btn.innerText = originalText, 2000);
+            });
+        };
+    </script>
+</body>
+</html>
