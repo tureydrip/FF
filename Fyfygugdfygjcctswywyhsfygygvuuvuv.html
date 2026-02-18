@@ -77,7 +77,7 @@
 
         <div class="product-card">
             <h3>2. Agregar Stock (Keys)</h3>
-            <p style="font-size:0.8rem">Selecciona producto y pega las keys.</p>
+            <p style="font-size:0.8rem">Selecciona producto y pega las keys (separadas por espacio, enter o comas).</p>
             
             <select id="prodSelect" onchange="checkStock()"></select>
             
@@ -85,7 +85,7 @@
 
             <textarea id="keysInput" rows="5" placeholder="Pega las keys aquí...
 ABCD-1234
-EFGH-5678"></textarea>
+EFGH-5678, IJKL-9012"></textarea>
             <button onclick="addKeys()">Cargar Keys al Sistema</button>
         </div>
 
@@ -107,7 +107,7 @@ EFGH-5678"></textarea>
     <script type="module">
         import { db, ref, push, set, get, update, auth, onAuthStateChanged } from './firebase-config.js';
 
-        // Variable global para guardar los usuarios temporalmente y hacer la búsqueda rápida
+        // Variable global para guardar los usuarios temporalmente
         let cachedUsers = [];
 
         // --- SISTEMA DE LOGS EN PANTALLA ---
@@ -124,9 +124,8 @@ EFGH-5678"></textarea>
             if (user) {
                 loading.innerText = "Conectado como: " + user.email;
                 loading.style.color = "#2ecc71";
-                // Solo cargamos productos y usuarios cuando confirmamos conexión
                 loadProductSelect();
-                loadUsersForSearch(); // Cargar usuarios para el predictivo
+                loadUsersForSearch(); 
             } else {
                 loading.innerText = "⚠️ No estás logueado. La base de datos puede rechazar la lectura.";
                 loading.style.color = "#e74c3c";
@@ -134,42 +133,38 @@ EFGH-5678"></textarea>
             }
         });
 
-        // --- NUEVO: CARGAR USUARIOS PARA EL PREDICTIVO ---
+        // --- CARGAR USUARIOS PARA EL PREDICTIVO ---
         window.loadUsersForSearch = function() {
-            console.log("Cargando lista de usuarios para búsqueda...");
             get(ref(db, 'users')).then(snap => {
-                cachedUsers = []; // Reiniciar lista
+                cachedUsers = []; 
                 if(snap.exists()){
                     snap.forEach(childSnap => {
                         const userData = childSnap.val();
-                        // Guardamos UID y Username
                         cachedUsers.push({
                             key: childSnap.key,
                             username: userData.username || "Sin Nombre",
                             email: userData.email || ""
                         });
                     });
-                    console.log(`Cargados ${cachedUsers.length} usuarios para búsqueda.`);
                 }
             }).catch(error => {
-                console.warn("No se pudo pre-cargar usuarios (posiblemente falta de permisos de admin).");
+                console.warn("No se pudo pre-cargar usuarios.");
             });
         }
 
-        // --- NUEVO: LÓGICA DE BÚSQUEDA PREDICTIVA ---
+        // --- LÓGICA DE BÚSQUEDA PREDICTIVA ---
         const searchInput = document.getElementById('userSearch');
         const suggestionsBox = document.getElementById('suggestionsList');
 
         searchInput.addEventListener('input', function() {
             const text = this.value.toLowerCase();
-            suggestionsBox.innerHTML = ''; // Limpiar lista anterior
+            suggestionsBox.innerHTML = ''; 
             
             if (text.length === 0) {
                 suggestionsBox.style.display = 'none';
                 return;
             }
 
-            // Filtrar usuarios que empiecen con el texto escrito
             const matches = cachedUsers.filter(u => u.username.toLowerCase().startsWith(text));
 
             if (matches.length > 0) {
@@ -177,10 +172,8 @@ EFGH-5678"></textarea>
                 matches.forEach(user => {
                     const div = document.createElement('div');
                     div.className = 'suggestion-item';
-                    // Muestra el nombre y el UID recortado en pequeño
                     div.innerHTML = `${user.username} <small>(${user.key.substr(0,5)}...)</small>`;
                     
-                    // Al hacer click, rellenar el input
                     div.onclick = () => {
                         searchInput.value = user.username;
                         suggestionsBox.style.display = 'none';
@@ -192,7 +185,6 @@ EFGH-5678"></textarea>
             }
         });
 
-        // Cerrar sugerencias si haces click fuera
         document.addEventListener('click', function(e) {
             if (e.target !== searchInput) {
                 suggestionsBox.style.display = 'none';
@@ -205,7 +197,7 @@ EFGH-5678"></textarea>
             sel.innerHTML = "<option>Cargando lista...</option>"; 
 
             get(ref(db, 'products')).then(snap => {
-                sel.innerHTML = ""; // Limpiar mensaje de carga
+                sel.innerHTML = ""; 
                 
                 if(snap.exists()){
                     snap.forEach(childSnap => {
@@ -214,14 +206,13 @@ EFGH-5678"></textarea>
                         opt.text = `${childSnap.val().name} - $${childSnap.val().price}`;
                         sel.add(opt);
                     });
-                    // Verificar stock del primer elemento automáticamente
                     checkStock();
                 } else {
                     sel.innerHTML = "<option>No hay productos creados</option>";
                     document.getElementById('stockDisplay').innerText = "Sin productos";
                 }
             }).catch(error => {
-                logError("No se pudo leer 'products'. Verifica tus reglas de Firebase. " + error.message);
+                logError("No se pudo leer 'products'. " + error.message);
             });
         }
 
@@ -247,7 +238,7 @@ EFGH-5678"></textarea>
             }).catch(e => logError(e.message));
         };
 
-        // --- 4. VERIFICAR STOCK (Visual) ---
+        // --- 4. VERIFICAR STOCK ---
         window.checkStock = function() {
             const prodId = document.getElementById('prodSelect').value;
             const display = document.getElementById('stockDisplay');
@@ -268,36 +259,38 @@ EFGH-5678"></textarea>
             });
         }
 
-        // --- 5. AGREGAR KEYS ---
+        // --- 5. AGREGAR KEYS (MODIFICADO) ---
         window.addKeys = () => {
             const prodId = document.getElementById('prodSelect').value;
             const rawText = document.getElementById('keysInput').value;
             
             if(!prodId || !rawText) return alert("Selecciona producto y escribe keys");
 
-            // Limpieza básica de keys
-            let rawKeys = rawText.split(/[\n\s,]+/);
-            const cleanKeys = [];
-            rawKeys.forEach(k => {
-                let clean = k.trim();
-                if(clean.length > 1) cleanKeys.push(clean);
-            });
+            // --- AQUÍ ESTÁ EL CAMBIO SOLICITADO ---
+            // split(/[\n,\s]+/) hace lo siguiente:
+            // \n : Rompe si hay salto de línea (columnas)
+            // ,  : Rompe si hay una coma
+            // \s : Rompe si hay un espacio en blanco
+            // Esto asegura que si pones "Key1 Key2" las separe en dos.
+            
+            const cleanKeys = rawText
+                .split(/[\n,\s]+/) // Divide por Enter, Coma o Espacio
+                .map(k => k.trim()) // Limpia espacios residuales
+                .filter(k => k.length > 0); // Elimina entradas vacías
 
-            if(cleanKeys.length === 0) return alert("No hay keys válidas");
+            if(cleanKeys.length === 0) return alert("No hay keys válidas o solo hay espacios vacíos.");
 
             const updates = {};
-            // Referencia directa al nodo de keys del producto
             const baseRef = `products/${prodId}/keys`;
 
             cleanKeys.forEach(k => {
-                // Generamos ID única
                 const newId = push(ref(db, baseRef)).key; 
                 updates[`${baseRef}/${newId}`] = k;
             });
 
             update(ref(db), updates)
                 .then(() => {
-                    alert(`¡Listo! Se agregaron ${cleanKeys.length} keys.`);
+                    alert(`¡Listo! Se agregaron ${cleanKeys.length} keys correctamente.`);
                     document.getElementById('keysInput').value = "";
                     checkStock();
                 })
@@ -315,14 +308,11 @@ EFGH-5678"></textarea>
             msg.innerText = "Buscando usuario...";
             
             try {
-                // NOTA: Como ya tenemos cachedUsers, podríamos buscar ahí, 
-                // pero por seguridad hacemos get() directo para tener el saldo más reciente.
                 const snapshot = await get(ref(db, 'users'));
                 let foundUid = null;
                 let currentBal = 0;
 
                 snapshot.forEach(childSnap => {
-                    // Comparamos el nombre escrito con la base de datos
                     if(childSnap.val().username === targetUser) {
                         foundUid = childSnap.key;
                         currentBal = parseFloat(childSnap.val().balance || 0);
@@ -335,9 +325,6 @@ EFGH-5678"></textarea>
                     msg.innerText = `Saldo actualizado a $${newBal}`;
                     msg.className = "success";
                     document.getElementById('amountAdd').value = '';
-                    
-                    // Opcional: Recargar usuarios por si el saldo se mostrara en el predictivo
-                    // loadUsersForSearch(); 
                 } else {
                     msg.innerText = "Usuario no encontrado";
                     msg.className = "error";
