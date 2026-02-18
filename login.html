@@ -199,6 +199,7 @@
     </div>
 
     <script>
+        // --- EFECTOS VISUALES (NO TOCAR) ---
         const canvas = document.getElementById('particle-canvas');
         const ctx = canvas.getContext('2d');
         let width, height;
@@ -281,6 +282,7 @@
         
         let isLogin = true;
 
+        // Cambiar entre Login y Registro
         toggleBtn.addEventListener('click', () => {
             isLogin = !isLogin;
             title.innerText = isLogin ? "Iniciar Sesión" : "Crear Cuenta";
@@ -289,46 +291,67 @@
             msg.innerText = "";
         });
 
+        // Lógica Principal
         actionBtn.addEventListener('click', async () => {
-            const user = userIn.value.trim().replace(/\s/g, ''); // Quitamos espacios
+            const userRaw = userIn.value.trim();
+            // Quitamos espacios para el email, pero guardamos el original
+            const userClean = userRaw.replace(/\s/g, ''); 
             const pass = passIn.value;
-            const fakeEmail = `${user}@sistema.local`; // Email falso interno
 
-            if(!user || !pass) { msg.innerText = "LLENA TODOS LOS CAMPOS"; return; }
+            // Email falso para que Firebase funcione solo con usuario
+            const fakeEmail = `${userClean}@sistema.local`; 
+
+            if(!userClean || !pass) { 
+                msg.innerText = "LLENA TODOS LOS CAMPOS"; 
+                return; 
+            }
 
             try {
                 actionBtn.innerText = "PROCESANDO...";
-                actionBtn.disabled = true; // Evitar doble clic
+                actionBtn.disabled = true;
 
                 if(isLogin) {
+                    // --- MODO LOGIN ---
                     await signInWithEmailAndPassword(auth, fakeEmail, pass);
+                    // Si entra, redirige
                     window.location.href = "dashboard.html";
                 } else {
+                    // --- MODO REGISTRO ---
                     const userCredential = await createUserWithEmailAndPassword(auth, fakeEmail, pass);
-                    // Crear entrada en DB con saldo 0
-                    await set(ref(db, 'users/' + userCredential.user.uid), {
-                        username: user,
-                        balance: 0,
-                        role: 'user' // Por defecto usuario normal
+                    const uid = userCredential.user.uid;
+
+                    // AQUÍ ESTÁ LA CLAVE: Guardamos el usuario en la DB
+                    // Esto permite que el Admin Panel lo encuentre luego.
+                    await set(ref(db, 'users/' + uid), {
+                        username: userClean, // Nombre para buscar
+                        balance: 0,          // Saldo inicial
+                        role: 'user',        // Rol normal
+                        email: fakeEmail     // Referencia interna
                     });
+
                     window.location.href = "dashboard.html";
                 }
             } catch (error) {
                 console.error(error);
-                // Mensajes de error personalizados
+                // Manejo de errores traducido
                 if (error.code === 'auth/email-already-in-use') {
-                    msg.innerText = "EL USUARIO YA EXISTE.";
+                    msg.innerText = "ESTE NOMBRE DE USUARIO YA EXISTE.";
                 } else if (error.code === 'auth/weak-password') {
-                    msg.innerText = "CONTRASEÑA DÉBIL (MIN 6 CARACTERES).";
+                    msg.innerText = "CONTRASEÑA MUY CORTA (MIN 6).";
                 } else if (error.code === 'auth/invalid-credential' || error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
-                    msg.innerText = "CREDENCIALES INVÁLIDAS.";
+                    msg.innerText = "USUARIO O CONTRASEÑA INCORRECTOS.";
                 } else {
-                    msg.innerText = "ERROR DE CONEXIÓN.";
+                    msg.innerText = "ERROR: " + error.code;
                 }
                 
                 actionBtn.innerText = isLogin ? "Entrar" : "Registrarse";
                 actionBtn.disabled = false;
             }
+        });
+        
+        // Permitir dar ENTER para entrar
+        document.addEventListener('keypress', (e) => {
+            if(e.key === 'Enter') actionBtn.click();
         });
     </script>
 </body>
